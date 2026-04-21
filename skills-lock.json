@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "databricks-apps": {
+      "source": "databricks/databricks-agent-skills",
+      "sourceType": "github",
+      "computedHash": "cc54e144cc5ce94ea8fe695659c60fdb65bc6f36070c113ebf7e3addc6457285"
+    },
+    "databricks-core": {
+      "source": "databricks/databricks-agent-skills",
+      "sourceType": "github",
+      "computedHash": "3a9be89081613e730f1f80daa38fa6b2b50e1c0e903f8dac9f69a9d02b7f17ee"
+    }
+  }
+}

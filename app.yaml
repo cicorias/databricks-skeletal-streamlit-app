@@ -1,0 +1,27 @@
+command:
+  - "python"
+  - "app/run.py"
+
+env:
+  - name: STREAMLIT_SERVER_ENABLE_CORS
+    value: "false"
+  - name: STREAMLIT_SERVER_ENABLE_XSRF_PROTECTION
+    value: "false"
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: DATABRICKS_CATALOG
+    value: "dev"
+  - name: DATABRICKS_SCHEMA
+    value: "default"
+  - name: TABLE_MV_MONTHLY_SUMMARY
+    valueFrom: mv-monthly-summary
+  - name: TABLE_MV_REP_LEADERBOARD
+    valueFrom: mv-rep-leaderboard
+  - name: TABLE_WORKFLOW
+    valueFrom: workflow-table
+  - name: TABLE_WORKFLOW_STEPS
+    valueFrom: workflow-steps
+  - name: TABLE_WORKFLOW_CONFIG
+    valueFrom: workflow-config
+  - name: TABLE_WORKFLOW_AUDIT
+    valueFrom: workflow-audit

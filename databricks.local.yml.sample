@@ -1,0 +1,11 @@
+# Copy this file to databricks.local.yml and fill in your values.
+# databricks.local.yml is gitignored — do not commit it.
+
+variables:
+  warehouse_id:
+    description: SQL warehouse ID for the app
+    default: <your-warehouse-id>
+  catalog:
+    default: dev
+  schema:
+    default: default

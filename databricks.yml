@@ -1,0 +1,22 @@
+bundle:
+  name: streamlit-app
+
+include:
+  - databricks.local.yml
+
+resources:
+  apps:
+    streamlit_app:
+      name: streamlit-app
+      description: Sales Review Portal — Streamlit on Databricks Apps
+      source_code_path: .
+
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+
+targets:
+  dev:
+    default: true
