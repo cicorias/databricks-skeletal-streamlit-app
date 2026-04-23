@@ -13,6 +13,8 @@ env:
     value: "dev"
   - name: DATABRICKS_SCHEMA
     value: "default"
+  - name: SILVER_VOLUME_NAME
+    value: "silver"
   - name: TABLE_MV_MONTHLY_SUMMARY
     valueFrom: mv-monthly-summary
   - name: TABLE_MV_REP_LEADERBOARD

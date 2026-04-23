@@ -1,4 +1,5 @@
 {
+  "user_api_scopes": ["sql"],
   "resources": [
     {
       "name": "sql-warehouse",
@@ -53,6 +54,14 @@
         "securable_full_name": "__CATALOG__.__SCHEMA__.vw_workflow_audit",
         "securable_type": "TABLE",
         "permission": "SELECT"
+      }
+    },
+    {
+      "name": "silver-volume",
+      "uc_securable": {
+        "securable_full_name": "__CATALOG__.__SCHEMA__.__SILVER_VOL__",
+        "securable_type": "VOLUME",
+        "permission": "READ_VOLUME"
       }
     }
   ]

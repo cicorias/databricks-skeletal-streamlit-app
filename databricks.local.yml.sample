@@ -2,6 +2,9 @@
 # databricks.local.yml is gitignored — do not commit it.
 
 variables:
+  app_name:
+    description: Databricks App name
+    default: streamlit-app
   warehouse_id:
     description: SQL warehouse ID for the app
     default: <your-warehouse-id>
@@ -9,3 +12,11 @@ variables:
     default: dev
   schema:
     default: default
+
+targets:
+  dev:
+    workspace:
+      host: "https://adb-<workspace-id>.<region>.azuredatabricks.net/"
+      # eg       host: "https://adb-1234561234567890.9.azuredatabricks.net/"
+      auth_type: azure-cli
+      profile: dev

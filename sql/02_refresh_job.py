@@ -7,11 +7,21 @@ Schedule it to run whenever new parquet files land in the Volume
 
 It refreshes both materialized views so the Streamlit app
 always reads pre-aggregated, fast data via Photon.
+
+Configure CATALOG and SCHEMA via Databricks job parameters or
+widget defaults below.
 """
 from databricks.sdk.runtime import spark   # available in Databricks runtime
 
-CATALOG = "my_catalog"
-SCHEMA  = "my_schema"
+try:
+    CATALOG = dbutils.widgets.get("catalog")  # noqa: F821
+except Exception:
+    CATALOG = "dev"
+
+try:
+    SCHEMA = dbutils.widgets.get("schema")  # noqa: F821
+except Exception:
+    SCHEMA = "default"
 
 MVS = [
     "mv_monthly_summary",
