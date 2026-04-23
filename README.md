@@ -350,17 +350,32 @@ Open http://localhost:8000 in your browser.
 
 #### Makefile reference
 
+All variables are configurable: `PROFILE`, `CATALOG`, `SCHEMA`, `SILVER_VOL`,
+`APP_NAME`, `APP_PORT`. Example: `make env PROFILE=mcaps01 CATALOG=prod`.
+
 | Target | What it does |
 |--------|-------------|
+| **Local development** | |
 | `make install` | `uv sync` — install deps into `.venv` |
-| `make dev` | Start Streamlit locally (reads `.env` via dotenv) |
+| `make dev` | Start Streamlit locally on `APP_PORT` (reads `.env` via dotenv) |
+| `make dev-run` | Start via the production entry point (`app/run.py`) |
+| `make dev-fresh` | Refresh token, regenerate `.env`, and start Streamlit in one command |
 | `make env` | Generate `.env` from your Databricks CLI profile (auto-detects warehouse) |
 | `make token` | Print a fresh OAuth token |
-| `make gen-data` | Regenerate sample parquet files |
-| `make create-volume` | Create the Unity Catalog volume |
-| `make upload-data` | Upload parquet files to the volume (creates volume first) |
+| **Data pipeline** | |
+| `make gen-data` | Regenerate sample parquet files **and** silver audit JSON files |
+| `make create-volume` | Create the Unity Catalog volumes (`raw_data` + `silver`) |
+| `make upload-data` | Upload parquet + silver files to the volumes (creates volumes first) |
 | `make sql-setup` | Create tables, MVs, workflow tables, seed data, and audit view |
-| `make deploy` | Upload source + deploy the Databricks App |
+| `make refresh` | Refresh materialized views (re-reads `sales_raw`) |
+| **Deploy** | |
+| `make deploy` | Deploy the Databricks App via DABs bundle (recommended) |
+| `make deploy-cli` | Deploy via plain CLI — no DABs/Terraform required |
+| `make deploy-code` | Upload code + create/deploy app (no resource registration) |
+| `make deploy-perms SP=<guid>` | Emit SQL grants for the app service principal |
+| `make stop` | Stop the Databricks App (keeps definition, saves compute) |
+| `make delete-app` | Delete the Databricks App entirely (removes service principal too) |
+| **Cleanup** | |
 | `make clean-runtime` | **Tier 1** — delete workflow submissions (keep tables + seed data) |
 | `make clean-data` | **Tier 2** — drop all tables/views/files (keep volume + app) |
 | `make clean-all` | **Tier 3** — full teardown (app + volume + workspace files) |
@@ -401,6 +416,21 @@ make install gen-data upload-data sql-setup env dev
 ### 📜 Audit Log
 - Full history of every workflow action
 - Filterable by status
+
+### 📁 Pipeline Lineage
+- Browse pipeline audit artifacts stored in Unity Catalog Volumes
+- Hierarchical drill-down: **Reporting Period → Business Code → Job Run**
+- Renders `sales-check.json` as a styled dashboard with status banner,
+  section summary cards, and a tick-and-tie checks table
+- Raw JSON expandable for full detail
+
+See [Pipeline Lineage](#pipeline-lineage) below for how it works.
+
+### 🔍 Session Debug
+- Inspect environment variables, request headers, and decoded JWT tokens
+- View current user SCIM profile and group membership
+- Decode both user OBO and service principal tokens
+- Useful for troubleshooting auth and role claims
 
 ---
 
@@ -476,6 +506,66 @@ Best run against a clean environment (`make clean-runtime` first).
 
 ---
 
+## Pipeline Lineage
+
+The **📁 Pipeline Lineage** page provides a read-only viewer for pipeline
+audit artifacts (`sales-check.json`) stored in a Unity Catalog Volume.
+It lets reviewers inspect the data-quality checks that ran during each
+pipeline execution — without leaving the Streamlit app.
+
+### How it works
+
+1. **Silver Volume layout** — Each pipeline run writes a JSON audit file
+   into a structured folder hierarchy inside the `silver` Volume:
+
+   ```
+   /Volumes/<catalog>/<schema>/silver/
+   └── YYYY-MM/                    ← reporting period
+       └── <BUSINESS_CODE>/        ← e.g. UNIT001, UNIT002
+           └── job_MMDDYY_HHMMSS/ ← unique job run folder
+               └── sales-check.json
+   ```
+
+2. **Hierarchical drill-down** — The app lists available folders at each
+   level using the Databricks SDK `files.list_directory_contents()` API:
+   - **Reporting Period** picker (year + month)
+   - **Business Code** picker (sub-folders under the period)
+   - **Job Run ID** picker (sub-folders under the business code)
+
+3. **Audit JSON rendering** — Once a run is selected, the app reads
+   `sales-check.json` and renders it as:
+   - A **status banner** (PASS / WARN / FAIL) with pass/fail counts
+   - **Section summary cards** for Source, OOB Check, Working Tab,
+     Load Tab, and Upload Tab — showing row counts, sums, and balances
+   - A **Tick & Tie table** listing each cross-check with a ✅/❌ result
+   - An expandable **Raw JSON** view for full detail
+
+4. **Caching** — Folder listings and file contents are cached in Streamlit
+   session state. Click **🔄 Refresh listings** to clear the cache and
+   re-fetch from the Volume.
+
+### What the audit checks verify
+
+The `sales-check.json` file tracks data lineage across pipeline stages:
+
+| Check | What it validates |
+|-------|-------------------|
+| **Source → Working** | Row counts and signed sums carry forward correctly |
+| **OOB (Out-of-Balance)** | Net imbalance is within tolerance; paired entries balance |
+| **Working Tab** | Upper (accrued) + Lower (recognized) revenue nets to $0 |
+| **Load Tab** | Credit and debit adjustment absolute sums match |
+| **Upload Tab** | Header + line rows tally; credits = debits (entry balanced) |
+| **Row lineage** | End-to-end row count: source → working → load → upload |
+
+### Generating sample data
+
+```bash
+make gen-data       # creates data/silver_output/ with 24 months × 10 units
+make upload-data    # uploads to /Volumes/<catalog>/<schema>/silver/
+```
+
+---
+
 ## Query performance
 
 All app queries hit the **materialized views**, not the raw parquet.
@@ -498,19 +588,27 @@ Raw parquet is only ever scanned when the refresh job runs.
 ## File layout
 
 ```
-poc/
 ├── Makefile                     # make install / dev / env / deploy / …
 ├── app.yaml                     # Databricks App config (entry point + env vars)
+├── databricks.yml               # DABs bundle definition
+├── databricks.local.yml         # Local overrides (git-ignored)
+├── pyproject.toml               # Python project + dependency manifest (uv)
+├── meta/
+│   └── app-resources.json.tpl   # Template for Databricks App resource registration
 ├── data/
-│   └── generate_parquet.py      # run locally to create sample data
+│   ├── generate_parquet.py      # Generate sample sales parquet files
+│   └── generate_silver.py       # Generate sample pipeline audit JSON files
 ├── sql/
-│   ├── 01_setup.sql             # one-time setup in Databricks SQL Editor
-│   └── 02_refresh_job.py        # scheduled job to refresh MVs
+│   ├── 01_setup.sql             # DDL template (__CATALOG__/__SCHEMA__ placeholders)
+│   ├── 02_refresh_job.py        # Scheduled job to refresh MVs
+│   └── apply.py                 # Execute SQL template via Databricks CLI
 └── app/
-    ├── __init__.py               # makes app/ a Python package
-    ├── app.py                    # Streamlit entry point
-    ├── db.py                     # SQL Warehouse connector helper
-    ├── workflow.py               # submit / approve / reject logic
+    ├── __init__.py              # Makes app/ a Python package
+    ├── app.py                   # Streamlit entry point (all pages)
+    ├── auth.py                  # OBO + Service Principal auth helpers
+    ├── db.py                    # SQL Warehouse connector (SP + user connections)
+    ├── run.py                   # Production entry point (Databricks Apps port)
+    ├── workflow.py              # Submit / approve / reject logic
     └── requirements.txt
 ```
 
