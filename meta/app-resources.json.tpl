@@ -61,7 +61,7 @@
       "uc_securable": {
         "securable_full_name": "__CATALOG__.__SCHEMA__.__SILVER_VOL__",
         "securable_type": "VOLUME",
-        "permission": "READ_VOLUME"
+        "permission": "WRITE_VOLUME"
       }
     }
   ]

@@ -723,6 +723,60 @@ def main():
         except Exception as exc:
             st.error(f"Error retrieving SP token: {exc}")
 
+        st.divider()
+
+        # ── App SP Permissions (from app-resources.json.tpl) ─────────
+        st.subheader("🛡️ App SP Permissions")
+        st.caption("Permissions granted to the app's service principal via `meta/app-resources.json.tpl`.")
+
+        _catalog = os.environ.get("DATABRICKS_CATALOG", "dev")
+        _schema = os.environ.get("DATABRICKS_SCHEMA", "default")
+        _silver_vol = os.environ.get("SILVER_VOLUME_NAME", "silver")
+        _perm_rows = [
+            {"Resource": "sql-warehouse", "Type": "SQL Warehouse", "Securable": "(warehouse ID)", "Permission": "CAN_USE"},
+            {"Resource": "mv-monthly-summary", "Type": "TABLE", "Securable": f"{_catalog}.{_schema}.mv_monthly_summary", "Permission": "SELECT"},
+            {"Resource": "mv-rep-leaderboard", "Type": "TABLE", "Securable": f"{_catalog}.{_schema}.mv_rep_leaderboard", "Permission": "SELECT"},
+            {"Resource": "workflow-table", "Type": "TABLE", "Securable": f"{_catalog}.{_schema}.workflow", "Permission": "MODIFY"},
+            {"Resource": "workflow-steps", "Type": "TABLE", "Securable": f"{_catalog}.{_schema}.workflow_steps", "Permission": "MODIFY"},
+            {"Resource": "workflow-config", "Type": "TABLE", "Securable": f"{_catalog}.{_schema}.workflow_config", "Permission": "SELECT"},
+            {"Resource": "workflow-audit", "Type": "TABLE", "Securable": f"{_catalog}.{_schema}.vw_workflow_audit", "Permission": "SELECT"},
+            {"Resource": "silver-volume", "Type": "VOLUME", "Securable": f"{_catalog}.{_schema}.{_silver_vol}", "Permission": "WRITE_VOLUME"},
+        ]
+        st.dataframe(
+            pd.DataFrame(_perm_rows),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        st.divider()
+
+        # ── Volume Write / Read Test ─────────────────────────────────
+        st.subheader("📝 Volume Write / Read Test")
+        st.caption(f"Write a timestamped message to `{VOLUME_BASE}` then read it back to verify WRITE_VOLUME permission.")
+
+        if st.button("Run write → read test", key="vol_test_btn"):
+            _test_path = f"{VOLUME_BASE}/_debug_write_test.txt"
+            _ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            _msg = f"write-test ok | ts={_ts}"
+            try:
+                from databricks.sdk import WorkspaceClient
+                _w = WorkspaceClient(config=get_sp_config())
+
+                # Write
+                import io
+                _w.files.upload(_test_path, io.BytesIO(_msg.encode()), overwrite=True)
+                st.success(f"✅ **Write** succeeded → `{_test_path}`")
+
+                # Read back
+                _resp = _w.files.download(_test_path)
+                _read_back = _resp.contents.read().decode()
+                if _read_back == _msg:
+                    st.success(f"✅ **Read** matches — `{_read_back}`")
+                else:
+                    st.warning(f"⚠️ Read-back mismatch:\n  wrote: `{_msg}`\n  read:  `{_read_back}`")
+            except Exception as exc:
+                st.error(f"❌ Volume write/read test failed: {exc}")
+
 
 if __name__ == '__main__':
     main()

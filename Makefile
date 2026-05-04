@@ -155,7 +155,7 @@ endif
 	@echo "GRANT SELECT, MODIFY ON TABLE \`$(CATALOG)\`.\`$(SCHEMA)\`.\`workflow_steps\` TO \`$(SP)\`;"
 	@echo ""
 	@echo "-- 4. Volume access (silver pipeline data)"
-	@echo "GRANT READ VOLUME ON VOLUME \`$(CATALOG)\`.\`$(SCHEMA)\`.\`$(SILVER_VOL)\` TO \`$(SP)\`;"
+	@echo "GRANT WRITE VOLUME ON VOLUME \`$(CATALOG)\`.\`$(SCHEMA)\`.\`$(SILVER_VOL)\` TO \`$(SP)\`;"
 	@echo ""
 	@echo "-- 5. SQL Warehouse access (run via CLI or Warehouse Permissions UI)"
 	@echo "-- databricks api post /api/2.0/permissions/sql/warehouses/$(WAREHOUSE) \\"
