@@ -1,0 +1,27 @@
+.wrap {
+  overflow-x: auto;
+  border: 1px solid #e1e5eb;
+  border-radius: 6px;
+  background: white;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.table th,
+.table td {
+  padding: 0.5rem 0.75rem;
+  text-align: right;
+  border-bottom: 1px solid #eef0f3;
+}
+.table thead th {
+  background: #fafbfc;
+  text-align: right;
+  font-weight: 600;
+  color: #4b5666;
+}
+.table thead th:first-child,
+.table tbody th {
+  text-align: left;
+}

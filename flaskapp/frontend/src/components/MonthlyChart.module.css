@@ -1,0 +1,10 @@
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.5rem;
+}
+.col h3 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+  color: #1a2332;
+}

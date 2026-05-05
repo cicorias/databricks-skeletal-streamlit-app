@@ -1,0 +1,22 @@
+command:
+  - "gunicorn"
+  - "--pythonpath"
+  - "backend"
+  - "--bind"
+  - "0.0.0.0:${DATABRICKS_APP_PORT}"
+  - "--timeout"
+  - "120"
+  - "--workers"
+  - "2"
+  - "--access-logfile"
+  - "-"
+  - "flask_backend.app:app"
+
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: DATABRICKS_CATALOG
+    value: "dev"
+  - name: DATABRICKS_SCHEMA
+    value: "default"
+  # FLASK_ENV intentionally unset in production — disables flask-cors.

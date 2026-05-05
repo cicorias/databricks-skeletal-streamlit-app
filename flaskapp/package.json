@@ -1,0 +1,24 @@
+{
+  "name": "sales-dashboard-flask",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "React + Vite frontend for the Flask Databricks App backend",
+  "scripts": {
+    "dev": "vite frontend",
+    "dev:remote": "VITE_BACKEND_MODE=remote vite frontend",
+    "build": "tsc -p frontend/tsconfig.json --noEmit && vite build frontend",
+    "preview": "vite preview frontend",
+    "typecheck": "tsc -p frontend/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.1"
+  }
+}
