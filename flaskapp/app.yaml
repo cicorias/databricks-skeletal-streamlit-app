@@ -3,7 +3,7 @@ command:
   - "--pythonpath"
   - "backend"
   - "--bind"
-  - "0.0.0.0:${DATABRICKS_APP_PORT}"
+  - "0.0.0.0:$DATABRICKS_APP_PORT"
   - "--timeout"
   - "120"
   - "--workers"
