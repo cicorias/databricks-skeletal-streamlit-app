@@ -1,0 +1,23 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+.card {
+  background: white;
+  border: 1px solid #e1e5eb;
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+}
+.label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7480;
+  margin-bottom: 0.4rem;
+}
+.value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a2332;
+}

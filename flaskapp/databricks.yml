@@ -1,0 +1,42 @@
+bundle:
+  name: sales-dashboard-flask
+
+include:
+  - databricks.local.yml
+
+variables:
+  app_name:
+    description: Databricks App name
+    default: sales-dashboard-flask
+  warehouse_id:
+    description: SQL warehouse ID for the app
+
+sync:
+  exclude:
+    - "node_modules/**"
+    - ".venv/**"
+    - "__pycache__/**"
+    - "**/*.pyc"
+    - "frontend/dist/**"   # Vite build runs at deploy time on the platform
+    - "backend/tests/**"
+    - ".env"
+    - ".env.sample"
+    - "frontend/.env.sample"
+
+resources:
+  apps:
+    sales_dashboard_flask:
+      name: ${var.app_name}
+      description: Sales Review Portal — Flask + React on Databricks Apps
+      source_code_path: .
+
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.warehouse_id}
+            permission: CAN_USE
+
+targets:
+  dev:
+    mode: development
+    default: true

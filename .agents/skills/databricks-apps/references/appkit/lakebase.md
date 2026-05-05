@@ -7,8 +7,10 @@ Use Lakebase when your app needs **persistent read/write storage** — forms, CR
 | Pattern | Use Case | Data Source |
 |---------|----------|-------------|
 | Analytics | Read-only dashboards, charts, KPIs | Databricks SQL Warehouse |
-| Lakebase | CRUD operations, persistent state, forms | PostgreSQL (Lakebase Autoscaling) |
+| Lakebase | CRUD operations, persistent state, forms, low-latency reads of synced lakehouse data | PostgreSQL (Lakebase Autoscaling) |
 | Both | Dashboard with user preferences/saved state | Warehouse + Lakebase |
+
+> **Serving lakehouse data to apps?** If your app needs low-latency reads of Delta/UC tables (entity lookups, product catalogs, feature serving), use **Lakebase synced tables** to materialize them into Lakebase instead of querying a SQL warehouse (which takes seconds to minutes). See *Reading from Synced Tables* below.
 
 ## Scaffolding
 
@@ -164,6 +166,53 @@ import { PrismaPg } from "@prisma/adapter-pg";
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 ```
+
+## Reading from Lakebase synced tables
+
+Lakebase synced tables materialize Delta/UC tables into Lakebase Postgres for low-latency app reads. The lakehouse remains the source of truth; Lakebase serves as a read-optimized index.
+
+**Architecture:**
+```
+Delta gold tables  →  Synced tables (read-only)  →  App reads via pool.query()
+App writes         →  Lakebase OLTP tables        →  optional Lakehouse Sync → Delta
+```
+
+**Use synced tables when** data is curated in Delta, changes relatively slowly, and must be served at OLTP latency — operational consoles, user-facing apps on gold tables, feature serving, or hybrid read/write patterns. See the **`databricks-lakebase`** skill's [synced-tables.md](../../../databricks-lakebase/references/synced-tables.md) for the full decision checklist.
+
+> **Security note:** Synced tables do not propagate Unity Catalog fine-grained access control (row filters, column masks). If UC FGAC is critical, use DBSQL with user authorization instead.
+
+### How It Works
+
+Synced tables (created via `databricks postgres create-synced-table`) appear as regular Postgres tables. From the app's perspective, use the same `pool.query()` pattern but **read-only**.
+
+**Key differences from CRUD tables:**
+
+| | CRUD tables | Lakebase synced tables |
+|--|-------------|---------------|
+| Created by | App SP (via `CREATE TABLE`) | Sync pipeline (DLT) |
+| Owned by | SP role | System role (`databricks_writer_*`) |
+| Operations | Read + Write | **Read-only** (writes corrupt sync) |
+| Schema init | App must `CREATE SCHEMA/TABLE` | Already exists after sync |
+| Deploy-first | Required (SP must own schema) | Not required |
+
+**Permission grant required:** The app's SP has `CAN_CONNECT_AND_CREATE` but does **not** have `pg_read_all_data`. To read synced tables, the project owner must grant access — see the **`databricks-lakebase`** skill's SKILL.md "Grant app SP access to synced tables" section for the SQL commands and psql connection steps.
+
+**Example tRPC route reading synced taxi data:**
+
+```typescript
+topPickups: publicProcedure.query(async () => {
+  const { rows } = await pool.query(`
+    SELECT pickup_zip, COUNT(*) AS trip_count, AVG(fare_amount) AS avg_fare
+    FROM public.nyc_trips
+    GROUP BY pickup_zip
+    ORDER BY trip_count DESC
+    LIMIT 10
+  `);
+  return rows;
+}),
+```
+
+> **Do not write to synced tables.** The sync pipeline manages the data — direct writes corrupt the sync state. For mixed read/write patterns, read from synced tables and write to separate app-owned tables. To create synced tables and grant the app's SP read access, see the **`databricks-lakebase`** skill's [synced-tables.md](../../../databricks-lakebase/references/synced-tables.md) and the "Grant app SP access to synced tables" section in its SKILL.md.
 
 ## Key Differences from Analytics Pattern
 

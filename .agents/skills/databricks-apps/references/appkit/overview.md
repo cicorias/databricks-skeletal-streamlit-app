@@ -9,9 +9,11 @@ Before scaffolding, decide which data pattern the app needs:
 | Pattern | When to use | Init command |
 |---------|-------------|-------------|
 | **Analytics** (read-only) | Dashboards, charts, KPIs from warehouse | `--features analytics --set analytics.sql-warehouse.id=<ID>` |
+| **Lakebase synced tables** (low-latency reads) | Point lookups, entity search, catalogs from lakehouse data | `--features lakebase` (no `--set` flags needed) + sync Delta table via `databricks-lakebase` skill |
 | **Lakebase (OLTP)** (read/write) | CRUD forms, persistent state, user data | `--features lakebase --set lakebase.postgres.branch=<BRANCH> --set lakebase.postgres.database=<DB>` |
 | **Genie** (NL queries) | Chat interface over Unity Catalog tables | `--features genie --set genie.<resourceKey>.<field>=<value>` (check manifest) |
 | **Model Serving** (ML inference) | Chat, AI features, model predictions | Add `serving_endpoint` resource to `databricks.yml` (or `--features serving` if available in manifest) |
+| **Jobs** (trigger Lakeflow Jobs) | Kick off and monitor pre-existing notebooks / Python / SQL / dbt jobs | `--features jobs --set jobs.<resourceKey>.<field>=<JOB_ID>` (check manifest) |
 | **Multiple** | Combine plugins as needed (e.g. dashboard + CRUD, analytics + Genie) | `--features analytics,lakebase,genie,...` with all required `--set` flags per plugin |
 
 See [Lakebase Guide](lakebase.md) for full Lakebase scaffolding and app-code patterns.
@@ -127,6 +129,7 @@ Do not guess paths — run without args first, then pick from the index.
 | Use Lakebase for CRUD / persistent state | [Lakebase](lakebase.md) — createLakebasePool, tRPC patterns, schema init |
 | Add Genie chat | [Genie](genie.md) — space creation, plugin setup, frontend components |
 | Call ML model serving endpoints | [Model Serving](model-serving.md) — resource declaration, tRPC query pattern |
+| Trigger / monitor Lakeflow Jobs from the app | [Jobs](jobs.md) — env discovery, JobHandle API, SSE streaming |
 
 ## Critical Rules
 

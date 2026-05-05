@@ -1,0 +1,14 @@
+# Copy this file to databricks.local.yml (gitignored) and fill in your values.
+
+variables:
+  app_name:
+    default: sales-dashboard-flask
+  warehouse_id:
+    default: <your-warehouse-id>
+
+targets:
+  dev:
+    workspace:
+      host: "https://adb-<workspace-id>.<region>.azuredatabricks.net/"
+      auth_type: azure-cli
+      profile: dev

@@ -15,3 +15,7 @@ data/parquet_output
 .env
 databricks.local.yml
 data/silver_output/
+
+
+.envrc
+.azcli
