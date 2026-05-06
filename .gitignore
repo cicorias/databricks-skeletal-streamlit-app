@@ -16,6 +16,14 @@ data/parquet_output
 databricks.local.yml
 data/silver_output/
 
+# AppKit app build artifacts (safety net — appkitapp/.gitignore also covers these)
+appkitapp/node_modules/
+appkitapp/dist/
+appkitapp/client/dist/
+appkitapp/.databricks/
+appkitapp/.smoke-test/
+appkitapp/test-results/
+appkitapp/playwright-report/
 
 .envrc
 .azcli
