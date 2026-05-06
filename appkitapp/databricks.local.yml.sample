@@ -1,0 +1,32 @@
+# Copy this file to databricks.local.yml and update with your workspace-specific values.
+# databricks.local.yml is excluded from git and should never be committed.
+
+variables:
+  app_name:
+    default: sales-appkit
+
+targets:
+  dev:
+    workspace:
+      # Your Databricks workspace host URL
+      host: "https://adb-XXXXXXXXX.X.azuredatabricks.net/"
+      auth_type: azure-cli
+      profile: dev
+
+    variables:
+      # SQL warehouse ID for your development environment
+      sql_warehouse_id: YOUR_WAREHOUSE_ID
+      # Path to your raw data volume
+      files_path: /Volumes/YOUR_CATALOG/YOUR_SCHEMA/YOUR_VOLUME
+      # Catalog.schema.table reference for raw data
+      files_id: YOUR_CATALOG.YOUR_SCHEMA.YOUR_TABLE
+      # Genie space ID for analytics
+      genie_space_id: YOUR_GENIE_SPACE_ID
+      # Genie space display name
+      genie_space_name: Your Genie Space Name
+      # Lakebase Postgres project/branch path
+      postgres_branch: projects/YOUR_PROJECT/branches/YOUR_BRANCH
+      # Lakebase Postgres database path
+      postgres_database: projects/YOUR_PROJECT/branches/YOUR_BRANCH/databases/YOUR_DATABASE
+      # Model serving endpoint name for LLM inference
+      serving_endpoint_name: YOUR_ENDPOINT_NAME

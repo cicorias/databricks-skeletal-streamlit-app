@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "AppKit: Dev Server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/appkitapp"
+    },
+    {
+      "type": "msedge",
+      "request": "launch",
+      "name": "Launch Edge against localhost",
+      "url": "http://localhost:8000/analytics",
+      "webRoot": "${workspaceFolder}/appkitapp/client"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Analytics (AppKit + Edge)",
+      "configurations": [
+        "AppKit: Dev Server",
+        "Launch Edge against localhost"
+      ],
+      "stopAll": true
+    }
+  ]
+}
