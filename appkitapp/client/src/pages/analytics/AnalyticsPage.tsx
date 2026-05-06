@@ -19,7 +19,7 @@ import { sql } from "@databricks/appkit-ui/js";
 import { useState } from 'react';
 
 export function AnalyticsPage() {
-  const { data, loading, error } = useAnalyticsQuery('hello_world', {
+  const { data, loading, error } = useAnalyticsQuery<Array<{ value: string }>>('hello_world', {
     message: sql.string('hello world'),
   });
 
@@ -44,7 +44,7 @@ export function AnalyticsPage() {
             {data && data.length > 0 && (
               <div className="space-y-2">
                 <div className="text-sm text-muted-foreground">Query: SELECT :message AS value</div>
-                <div className="text-2xl font-bold text-primary">{data[0].value}</div>
+                <div className="text-2xl font-bold text-primary">{'value' in data[0] ? data[0].value : null}</div>
               </div>
             )}
             {data && data.length === 0 && <div className="text-muted-foreground">No results</div>}
