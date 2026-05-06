@@ -5,6 +5,32 @@ Serverless SQL Warehouse → Streamlit approval app.
 
 ---
 
+## Table of contents
+
+- [Architecture](#architecture)
+  - [Why each piece](#why-each-piece)
+  - [Data flow — batch vs real-time](#data-flow--batch-vs-real-time)
+- [Setup — step by step](#setup--step-by-step)
+  - [1. Generate sample parquet files (local)](#1-generate-sample-parquet-files-local)
+  - [2. Upload to Databricks Volume](#2-upload-to-databricks-volume)
+  - [3. Run SQL setup](#3-run-sql-setup)
+  - [4. Create a Serverless SQL Warehouse](#4-create-a-serverless-sql-warehouse)
+  - [5. Deploy the Streamlit app](#5-deploy-the-streamlit-app)
+  - [6. Run locally (optional)](#6-run-locally-optional)
+  - [7. Schedule the refresh job](#7-schedule-the-refresh-job)
+- [App pages](#app-pages)
+- [Demo walkthrough](#demo-walkthrough)
+- [Pipeline Lineage](#pipeline-lineage)
+- [Query performance](#query-performance)
+- [File layout](#file-layout)
+- [Alternative app frontends](#alternative-app-frontends)
+  - [Flask + React app (`flaskapp/`)](#flask--react-app-flaskapp)
+  - [AppKit app (`appkitapp/`)](#appkit-app-appkitapp)
+- [Databricks artifacts](#databricks-artifacts)
+- [Cleanup](#cleanup)
+
+---
+
 ## Architecture
 
 ```
@@ -602,15 +628,80 @@ Raw parquet is only ever scanned when the refresh job runs.
 │   ├── 01_setup.sql             # DDL template (__CATALOG__/__SCHEMA__ placeholders)
 │   ├── 02_refresh_job.py        # Scheduled job to refresh MVs
 │   └── apply.py                 # Execute SQL template via Databricks CLI
-└── app/
-    ├── __init__.py              # Makes app/ a Python package
-    ├── app.py                   # Streamlit entry point (all pages)
-    ├── auth.py                  # OBO + Service Principal auth helpers
-    ├── db.py                    # SQL Warehouse connector (SP + user connections)
-    ├── run.py                   # Production entry point (Databricks Apps port)
-    ├── workflow.py              # Submit / approve / reject logic
-    └── requirements.txt
+├── app/
+│   ├── __init__.py              # Makes app/ a Python package
+│   ├── app.py                   # Streamlit entry point (all pages)
+│   ├── auth.py                  # OBO + Service Principal auth helpers
+│   ├── db.py                    # SQL Warehouse connector (SP + user connections)
+│   ├── run.py                   # Production entry point (Databricks Apps port)
+│   ├── workflow.py              # Submit / approve / reject logic
+│   └── requirements.txt
+├── flaskapp/                    # Flask + React alternative (see below)
+└── appkitapp/                   # Databricks AppKit alternative (see below)
 ```
+
+---
+
+## Alternative app frontends
+
+In addition to the Streamlit app (`app/`), this repo ships two standalone
+sub-projects that present the same sales data through different stacks.
+Both connect to the **same** Unity Catalog tables and materialized views, so
+the Databricks backend setup must be completed first.
+
+> **⚠️ Prerequisites — complete these before running either app:**
+>
+> 1. Generate sample data — `make gen-data` (from the repo root)
+> 2. Upload to Databricks Volume — `make upload-data`
+> 3. Create tables, MVs, and workflow tables — `make sql-setup`
+> 4. Create / verify a Serverless SQL Warehouse (see [Step 4](#4-create-a-serverless-sql-warehouse))
+>
+> These steps are documented in [Setup — step by step](#setup--step-by-step)
+> above. Skip them only if you have already run the Streamlit app against the
+> same workspace.
+
+### Flask + React app (`flaskapp/`)
+
+A single-page React dashboard backed by a Flask JSON API. Gunicorn serves
+both the React bundle and `/api/*` endpoints from one port. Uses the
+`databricks-sql-connector` with service-principal auth.
+
+```bash
+cd flaskapp
+make install          # Python + Node deps
+cp .env.sample .env   # fill in warehouse ID, host, credentials
+make dev-backend      # Flask on :8000
+make dev-frontend     # Vite on :5173 (proxies /api/* → Flask)
+```
+
+Deploy to Databricks Apps:
+
+```bash
+make deploy           # bundle validate → deploy → run
+```
+
+Full details: [`flaskapp/README.md`](flaskapp/README.md)
+
+### AppKit app (`appkitapp/`)
+
+A TypeScript app built with [Databricks AppKit](https://databricks.github.io/appkit/) —
+React, Tailwind CSS, and an Express server with built-in plugins for
+Analytics (SQL), Lakebase (Postgres), and Genie (natural-language queries).
+
+```bash
+cd appkitapp
+npm install
+npm run dev           # dev server with hot reload
+```
+
+Deploy to Databricks Apps:
+
+```bash
+cd appkitapp
+databricks bundle deploy    # uses appkitapp/databricks.yml
+```
+
+Full details: [`appkitapp/README.md`](appkitapp/README.md)
 
 ---
 
