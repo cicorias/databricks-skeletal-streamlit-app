@@ -1,26 +1,29 @@
 bundle:
   name: databricks-sales-appkit
 
-variables:
-  sql_warehouse_id:
-    description: SQL Warehouse ID
-  files_path:
-    description: Volume path for file storage (e.g. /Volumes/catalog/schema/volume_name)
-  files_id:
-    description: Permission to write to volumes
-  genie_space_id:
-    description: Default Genie Space ID
-  genie_space_name:
-    description: Genie Space for AI-powered data queries. Space IDs configured via plugin config.
-  postgres_branch:
-    description: Full Lakebase Postgres branch resource name. Obtain by running `databricks postgres list-branches projects/{project-id}`, select the desired item from the output array and use its .name value.
-  postgres_database:
-    description: Full Lakebase Postgres database resource name. Obtain by running `databricks postgres list-databases {branch-name}`, select the desired item from the output array and use its .name value. Requires the branch resource name.
-  serving_endpoint_name:
-    description: Serving endpoint name
+# variables:
+#   app_name:
+#     description: Name of the Databricks AppKit app
+#   sql_warehouse_id:
+#     description: SQL Warehouse ID
+#   files_path:
+#     description: Volume path for file storage (e.g. /Volumes/catalog/schema/volume_name)
+#   files_id:
+#     description: Permission to write to volumes
+#   genie_space_id:
+#     description: Default Genie Space ID
+#   genie_space_name:
+#     description: Genie Space for AI-powered data queries. Space IDs configured via plugin config.
+#   postgres_branch:
+#     description: Full Lakebase Postgres branch resource name. Obtain by running `databricks postgres list-branches projects/{project-id}`, select the desired item from the output array and use its .name value.
+#   postgres_database:
+#     description: Full Lakebase Postgres database resource name. Obtain by running `databricks postgres list-databases {branch-name}`, select the desired item from the output array and use its .name value. Requires the branch resource name.
+#   serving_endpoint_name:
+#     description: Serving endpoint name
 
 
 include:
+# pull variables from here...
   - databricks.local.yml
 
 sync:
